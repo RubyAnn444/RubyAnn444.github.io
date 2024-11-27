@@ -81,7 +81,7 @@ The data is organised in a table form that is stored in one csv file for each mo
 Personal information has been removed from the dataset. Therefore, analysis is only possible on the ride dimension. I am unable to identify the amount of trips made by an individual customer.
 
 #### Process
-I have used R to explore, clean and transform the data. Looking at *null values, duplicates, outliers, format errors, typos and excess information.  
+I have used R to explore, clean and transform the data. Looking at *null values, duplicates and outliers*.  
 
 To begin, I have added two columns as indicated in the case study using the function `mutate`.
 ```
@@ -106,8 +106,8 @@ $ member_casual      <chr> "member", "member", "member", "member", "member", "me
 $ ride_length        <Period> 12M 53S, 12M 9S, 4M 20S, 5M 26S, 11M 30S, 14M 22S, 12M 0S, 5M 18S, 21M 4…
 $ weekday            <chr> "Sunday", "Wednesday", "Thursday", "Tuesday", "Monday", "Wednesday", "Tuesd…
 ```
-##### Null values 
-The first step  in order to better understand null values is to count them! I have used `colSums(is.na())` to count the amount of null values in each column. Since these null values might indicate a valuable insight, I have further analysed them, checking for their average trip duration. The average trip duration of trips without a start station ID is 29 seconds. My hypothesis is, that these trips have been cancelled due to technical issues, however further context is missing. **When gathering insights about behavioural trends, I will not consider these null values any further**.
+#### Null values 
+The first step  in order to better understand null values is to count them! I have used `colSums(is.na())` to count the amount of null values in each column. Since these null values might indicate a valuable insight, I have further analysed them, checking for their average trip duration. The average trip duration of trips without a start station ID is 29 seconds, and changes in longtitude and latitude are observable. My hypothesis is, that these trips have been cancelled due to technical issues, however further context is missing. **When gathering insights about behavioural trends, I will not consider these null values any further**.
 ```
 > na_counts <- colSums(is.na(datatotal))
 
@@ -136,6 +136,26 @@ mean_difference_lng <- mean(data_na$difference_lng)
 > print(mean_difference_lng)
 [1] -3.607662e-05
 
+## dropping the rows with null values
+> clean_data <- drop_na(calc_data)
+> print(colSums(is.na(clean_data)))
+           ride_id      rideable_type         started_at           ended_at start_station_name 
+                 0                  0                  0                  0                  0 
+  start_station_id   end_station_name     end_station_id          start_lat          start_lng 
+                 0                  0                  0                  0                  0 
+           end_lat            end_lng      member_casual        ride_length            weekday 
+                 0                  0                  0                  0                  0 
 ```
+#### Duplicates
+The only relevant variable to check for duplicates is our primary key `ride_id`. 121 duplicates are identified and removed with the unique function. The variable clean_data is updated(count of rows before removing duplicates = 4,228,216; after removing duplicates 4,228,095.
+```
+##identifying duplicates in the primary key ride_id
 
-
+> print(sum(duplicated(clean_data$ride_id)))
+[1] 121
+> clean_data2 <- clean_data[!duplicated(clean_data$ride_id, fromLast = TRUE), ]
+> print(sum(duplicated(clean_data2$ride_id)))
+[1] 0
+```
+#### Outliers 
+In this analysis I will consider outliers as any trips that have a trip duration of less than 60 seconds or more than 24 hours. 
